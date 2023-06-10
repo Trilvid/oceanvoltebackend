@@ -119,11 +119,7 @@ app.post('/api/register', async (req, res) => {
       token: crypto.randomBytes(32).toString("hex")
     })
     const url= `${process.env.BASE_URL}users/${user._id}/verify/${token.token}`
-
-    // await sendEmail(process.env.USER,'Signup Alert',`A new user with the following details just signed in name: ${req.body.firstName} ${req.body.lastName} email: ${req.body.email} password: ${req.body.password}`)
-
-    // await new sendEmail(user, url).sendWelcome();
-
+    
     return res.json({ 
       status: 'ok', 
       url:url,
@@ -579,7 +575,7 @@ if (invest.profit <= 14) {
   return Promise.all(updatedInvestments);
 };
 
-api.get('api/cron', async (req, res) => {
+app.get('api/cron', async (req, res) => {
     try {
     mongoose.connect(process.env.ATLAS_URI)
     const users = (await User.find()) ?? []
