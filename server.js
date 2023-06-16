@@ -9,7 +9,6 @@ const path = require('path')
 var serveStatic = require('serve-static')
 const Token = require('./models/token')
 const crypto = require('crypto')
-const sendEmail = require('./utils/sendEmail')
 dotenv.config()
 
 const app = express()
@@ -251,7 +250,7 @@ app.post('/api/fundwallet', async (req, res) => {
           id:crypto.randomBytes(32).toString("hex"),
       }}
     )
-    res.json({ status: 'ok', funded: req.body.amount, name: user.name, email: user.email })
+    res.json({ status: 'ok', funded: req.body.amount, name: user.firstname, email: user.email })
   } catch (error) {
     console.log(error)
     res.json({ status: 'error' })
@@ -401,6 +400,7 @@ app.get('/api/getUsers', async (req, res) => {
   res.json(users)
 })
 
+
 app.post('/api/invest', async (req, res) => {
   const token = req.headers['x-access-token'];
   try {
@@ -418,19 +418,18 @@ app.post('/api/invest', async (req, res) => {
     };
 
     const durations = {
-      '24h': 1,
-      '48h': 2,
-      '72h': 3,
-      '5d': 5,
-      '15d': 15,
-      '30d': 30,
+      '24 hrs': 1,
+      '48 hrs': 2,
+      '72 hrs': 3,
+      '5  day(s)': 5,
+      '15 day(s)': 15,
+      '30 day(s)': 30,
     };
 
     const duration = req.body.duration;
     const percent = req.body.percent;
-    console.log({ duration, percent })
-    // !durations.hasOwnProperty(duration) ||
-    if (!percent) {
+    
+    if (!duration || !percent) {
       return res.status(400).json({
         message: 'Invalid duration or percentage provided.',
       });
@@ -442,9 +441,16 @@ app.post('/api/invest', async (req, res) => {
 
     const profit = calculateProfit(req.body.amount, profitPercent);
 
+      // working here care to join.... remember to delete fam
+      console.log({ duration, percent, pp: profitPercent, did: durationInDays, dim: durationInMilliseconds })
+
+
     if (user.capital >= req.body.amount) {
       const now = new Date();
       const endDate = new Date(now.getTime() + durationInMilliseconds);
+      // working here care to join.... remember to delete fam
+      console.log({endDate, ended: endDate.getTime()})
+
       await User.updateOne(
         { email: email },
         {
@@ -518,7 +524,6 @@ const changeInvestment = async (user, now) => {
     }
     
 if (invest.profit <= 14) {
-  console.log(user.funded)
   await User.updateOne(
     { email: user.email },
     {
@@ -530,31 +535,30 @@ if (invest.profit <= 14) {
     }
   )
 }
-// if(invest.profit > 14 && invest.profit <= 40){
-//     console.log(user.funded)
-//     await User.updateOne(
-//       { email: user.email },
-//       {
-//         $set:{
-//           funded:user.funded + Math.round(6/100 * invest.profit),
-//           periodicProfit:user.periodicProfit + Math.round(6/100 * invest.profit),
-//           capital:user.capital + Math.round(6/100 * invest.profit),
-//         }
-//       }
-//     )
-//   }
-//   else{
-//     await User.updateOne(
-//       { email: user.email },
-//       {
-//         $set:{
-//           funded:user.funded + Math.round(4.5/100 * invest.profit),
-//           periodicProfit:user.periodicProfit + Math.round(4.5/100 * invest.profit),
-//           capital:user.capital + Math.round(4.5/100 * invest.profit),
-//         }
-//       }
-//     )
-//   }
+if(invest.profit > 14 && invest.profit <= 40){
+    await User.updateOne(
+      { email: user.email },
+      {
+        $set:{
+          funded:user.funded + Math.round(6/100 * invest.profit),
+          periodicProfit:user.periodicProfit + Math.round(6/100 * invest.profit),
+          capital:user.capital + Math.round(6/100 * invest.profit),
+        }
+      }
+    )
+  }
+  else{
+    await User.updateOne(
+      { email: user.email },
+      {
+        $set:{
+          funded:user.funded + Math.round(4.5/100 * invest.profit),
+          periodicProfit:user.periodicProfit + Math.round(4.5/100 * invest.profit),
+          capital:user.capital + Math.round(4.5/100 * invest.profit),
+        }
+      }
+    )
+  }
     const profit = Math.round(10 / 100 * invest.profit);
     await User.updateOne(
       { email: user.email, 'investment._id': invest._id },
@@ -575,12 +579,13 @@ if (invest.profit <= 14) {
   return Promise.all(updatedInvestments);
 };
 
-app.get('api/cron', async (req, res) => {
+
+app.get('/api/cronJob', async (req, res) => {
+
     try {
     mongoose.connect(process.env.ATLAS_URI)
     const users = (await User.find()) ?? []
     const now = new Date().getTime()
-    // changeInvestment(users, now)
     
   for (const user of users) {
     const updatedInvestments = await changeInvestment(user, now);
@@ -593,162 +598,15 @@ app.get('api/cron', async (req, res) => {
       }
     );
   }
+    console.log('cron was excuted')
     return res.json({status:200})
+
   } catch (error) {
     console.log(error)
     return res.json({status:500})
   }
 })
 
-// app.post('/api/invest', async (req, res) => {
-//   const token = req.headers['x-access-token'];
-//   try {
-//     const decode = jwt.verify(token, 'secret1258');
-//     const email = decode.email;
-//     const user = await User.findOne({ email: email });
-    
-
-//     const calculateDurationInMilliseconds = (durationInDays) => {
-//       const millisecondsInADay = 24 * 60 * 60 * 1000;
-//       return durationInDays * millisecondsInADay;
-//     };
-
-//     const calculateProfit = (amount, percent) => {
-//       return (amount * percent) / 100;
-//     };
-
-//     const durations = {
-//       '24h': 1,
-//       '48h': 2,
-//       '72h': 3,
-//       '5d': 5,
-//       '15d': 15,
-//       '30d': 30,
-//     };
-    
-//     const duration = req.body.duration;
-//     const percent = req.body.percent;
-//     // !durations.hasOwnProperty(duration) |
-
-//     if (!percent) {
-//       console.log(duration)
-//       console.log(percent)
-//       return res.status(400).json({
-//         message: 'Invalid duration or percentage provided.',
-//       });
-//     }
-
-
-//     const durationInDays = durations[duration];
-//     const durationInMilliseconds = calculateDurationInMilliseconds(durationInDays);
-//     const profitPercent = parseFloat(percent.replace('%', ''));
-
-//     const profit = calculateProfit(req.body.amount, profitPercent);
-
-//     if (user.capital >= req.body.amount) {
-//       const now = new Date();
-//       const endDate = new Date(now.getTime() + durationInMilliseconds);
-//       await User.updateOne(
-//         { email: email },
-//         {
-//           $push: {
-//             investment: {
-//               type: 'investment',
-//               amount: req.body.amount,
-//               plan: req.body.plan,
-//               percent: req.body.percent,
-//               startDate: now.toLocaleString(),
-//               endDate: endDate.toLocaleString(),
-//               profit: profit,
-//               ended: endDate.getTime(),
-//               started: now.getTime(),
-//               periodicProfit: 0,
-//             },
-//             transaction: {
-//               type: 'investment',
-//               amount: req.body.amount,
-//               date: now.toLocaleString(),
-//               balance: user.funded,
-//               id: crypto.randomBytes(32).toString('hex'),
-//             },
-//           },
-//         }
-//       );
-//       await User.updateOne(
-//         { email: email },
-//         {
-//           $set: {
-//             capital: user.capital - req.body.amount,
-//             totalprofit: user.totalprofit + profit,
-//             withdrawDuration: now.getTime(),
-//           },
-//         }
-//       );
-//       return res.json({
-//         status: 'ok',
-//         amount: req.body.amount,
-//         name: user.firstname,
-//         email: user.email,
-//         periodicProfit: user.periodicProfit,
-//       });
-//     } else {
-//       return res.status(400).json({
-//         message: 'You do not have sufficient funds in your account.',
-//       });
-//     }
-//   } catch (error) {
-//     return res.status(500).json({ status: 500, error: error });
-//   }
-// });
-
-
-// const changeInvestment = async (user, now) => {
-//   const updatedInvestments = user.investment.map(async (invest) => {
-//     if (isNaN(invest.started)) {
-//       return invest;
-//     }
-//     if (now - invest.started >= invest.ended) {
-//       return invest;
-//     }
-//     if (isNaN(invest.profit)) {
-//       return invest;
-//     }
-//     const profit = Math.round(10 / 100 * invest.profit);
-//     await User.updateOne(
-//       { email: user.email, 'investment._id': invest._id },
-//       {
-//         $set: {
-//           funded: user.funded + profit,
-//           periodicProfit: user.periodicProfit + profit,
-//           capital: user.capital + profit,
-//           'investment.$.profit': profit,
-//         },
-//       }
-//     );
-//     return {
-//       ...invest,
-//       profit: profit,
-//     };
-//   });
-//   return Promise.all(updatedInvestments);
-// };
-
-// setInterval(async () => {
-//   const users = await User.find();
-//   const now = new Date().getTime();
-
-//   for (const user of users) {
-//     const updatedInvestments = await changeInvestment(user, now);
-//     await User.updateOne(
-//       { email: user.email },
-//       {
-//         $set: {
-//           investment: updatedInvestments,
-//         },
-//       }
-//     );
-//   }
-// }, 3600000);
 
 app.listen(port, () => {
   console.log(`server is running on port: ${port}`)
