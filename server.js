@@ -508,21 +508,21 @@ app.post('/api/invest', async (req, res) => {
 const changeInvestment = async (user, now) => {
   const updatedInvestments = user.investment.map(async (invest) => {
     if (isNaN(invest.started)) {
-      return invest;
+      return ;
     }
     if (user.investment === []) {
         return
     }
     if (now - invest.started >= invest.ended) {
-      return invest;
+      return ;
     }
     if (isNaN(invest.profit)) {
         return
     }
-    if (invest.profit === invest.profit) {
-      console.log("investment finished")
-      return 
-    }
+    // if (invest.profit === invest.profit) {
+    //   console.log("investment finished")
+    //   // return 
+    // }
     
 if (invest.profit <= 14) {
   await User.updateOne(
@@ -565,17 +565,17 @@ if(invest.profit > 14 && invest.profit <= 40){
     // after profit
     console.log({afterprof: profit})
 
-    // await User.updateOne(
-    //   { email: user.email, 'investment._id': invest._id },
-    //   {
-    //     $set: {
-    //       funded: user.funded + profit,
-    //       periodicProfit: user.periodicProfit + profit,
-    //       capital: user.capital + profit,
-    //       'investment.$.profit': profit,
-    //     },
-    //   }
-    // );
+    await User.updateOne(
+      { email: user.email, 'investment._id': invest._id },
+      {
+        $set: {
+          funded: user.funded + profit,
+          periodicProfit: user.periodicProfit + profit,
+          capital: user.capital + profit,
+          'investment.$.profit': profit,
+        },
+      }
+    );
     return {
       ...invest,
       profit: profit,
