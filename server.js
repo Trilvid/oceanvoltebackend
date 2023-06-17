@@ -421,7 +421,7 @@ app.post('/api/invest', async (req, res) => {
       '24 hrs': 1,
       '48 hrs': 2,
       '72 hrs': 3,
-      '5  day(s)': 5,
+      '5 day(s)': 5,
       '15 day(s)': 15,
       '30 day(s)': 30,
     };
@@ -449,7 +449,7 @@ app.post('/api/invest', async (req, res) => {
       const now = new Date();
       const endDate = new Date(now.getTime() + durationInMilliseconds);
       // working here care to join.... remember to delete fam
-      console.log({endDate, ended: endDate.getTime()})
+      console.log({endDate, ended: endDate.getTime(), profit})
 
       await User.updateOne(
         { email: email },
@@ -519,8 +519,9 @@ const changeInvestment = async (user, now) => {
     if (isNaN(invest.profit)) {
         return
     }
-    if (isNaN(invest.profit)) {
-      return invest;
+    if (invest.profit === invest.profit) {
+      console.log("investment finished")
+      return 
     }
     
 if (invest.profit <= 14) {
@@ -528,9 +529,9 @@ if (invest.profit <= 14) {
     { email: user.email },
     {
       $set: {
-        funded: user.funded + Math.round(11 / 100 * invest.profit),
-        periodicProfit: user.periodicProfit + Math.round(11 / 100 * invest.profit),
-        capital: user.capital + Math.round(11 / 100 * invest.profit),
+        funded: user.funded + Math.round(10 / 100 * invest.profit),
+        periodicProfit: user.periodicProfit + Math.round(10 / 100 * invest.profit),
+        capital: user.capital + Math.round(10 / 100 * invest.profit),
       }
     }
   )
@@ -559,18 +560,22 @@ if(invest.profit > 14 && invest.profit <= 40){
       }
     )
   }
-    const profit = Math.round(10 / 100 * invest.profit);
-    await User.updateOne(
-      { email: user.email, 'investment._id': invest._id },
-      {
-        $set: {
-          funded: user.funded + profit,
-          periodicProfit: user.periodicProfit + profit,
-          capital: user.capital + profit,
-          'investment.$.profit': profit,
-        },
-      }
-    );
+    // const profit = Math.round(10 / 100 * invest.profit);
+    const profit = invest.profit - Math.round(4.5/ 100 * invest.profit);
+    // after profit
+    console.log({afterprof: profit})
+
+    // await User.updateOne(
+    //   { email: user.email, 'investment._id': invest._id },
+    //   {
+    //     $set: {
+    //       funded: user.funded + profit,
+    //       periodicProfit: user.periodicProfit + profit,
+    //       capital: user.capital + profit,
+    //       'investment.$.profit': profit,
+    //     },
+    //   }
+    // );
     return {
       ...invest,
       profit: profit,
