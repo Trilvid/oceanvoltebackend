@@ -515,7 +515,7 @@ const changeInvestment = async (user, now) => {
     }
     if (user.investment === []) {
       console.log('investment is not empty array')
-      res.json({message:'investment is an empty array'})
+      res.json({message:'no investment'})
       return
     }
     if (now - invest.started >= invest.ended) {
@@ -586,72 +586,6 @@ const changeInvestment = async (user, now) => {
       }
         
       }
-//     if (isNaN(invest.started)) {
-//       return invest;
-//     }
-//     if (user.investment === []) {
-//         return
-//     }
-//     if (now - invest.started >= invest.ended) {
-//       console.log('investment finished')
-//       return invest;
-//     }
-//     if (isNaN(invest.profit)) {
-//         return
-//     }
-    
-// if (invest.profit <= 14) {
-//   await User.updateOne(
-//     { email: user.email },
-//     {
-//       $set: {
-//         funded: user.funded + Math.round(10 / 100 * invest.profit),
-//         periodicProfit: user.periodicProfit + Math.round(10 / 100 * invest.profit),
-//         capital: user.capital + Math.round(10 / 100 * invest.profit),
-//       }
-//     }
-//   )
-// }
-// if(invest.profit > 14 && invest.profit <= 40){
-//     await User.updateOne(
-//       { email: user.email },
-//       {
-//         $set:{
-//           funded:user.funded + Math.round(6/100 * invest.profit),
-//           periodicProfit:user.periodicProfit + Math.round(6/100 * invest.profit),
-//           capital:user.capital + Math.round(6/100 * invest.profit),
-//         }
-//       }
-//     )
-//   }
-//   else{
-//     await User.updateOne(
-//       { email: user.email },
-//       {
-//         $set:{
-//           funded:user.funded + Math.round(4.5/100 * invest.profit),
-//           periodicProfit:user.periodicProfit + Math.round(4.5/100 * invest.profit),
-//           capital:user.capital + Math.round(4.5/100 * invest.profit),
-//         }
-//       }
-//     )
-//   }
-//     // after profit
-//     // const profit = Math.round(10 / 100 * invest.profit);
-//     const profit = invest.profit - Math.round(10/ 100 * invest.profit);
-//     console.log({afterprof: profit})
-
-//     await User.updateOne(
-//       { email: user.email, 'investment._id': invest._id },
-//       {
-//         $set: {
-//           funded: user.funded + profit,
-//           periodicProfit: user.periodicProfit + profit,
-//           capital: user.capital + profit,
-//           'investment.$.profit': profit,
-//         },
-//       }
-//     );
     return {
       ...invest,
       // profit: profit,
@@ -659,95 +593,6 @@ const changeInvestment = async (user, now) => {
   });
   return Promise.all(updatedInvestments);
 };
-
-
-// const changeInvestment = (users, now) => {
-//   users.forEach((user) => {
-//     user.investment.map(async (invest) => {
-//       if (isNaN(invest.started)) {
-//         console.log('investment is no a number')
-//         res.json({message:'investment is no a number'})
-//         return
-//       }
-//       if (user.investment === []) {
-//         console.log('investment is not empty array')
-//         res.json({message:'investment is an empty array'})
-//         return
-//       }
-//       if (now - invest.started >= invest.ended) {
-//         console.log('investment completed')
-//         res.json({message:'investment completed'})
-//         return
-//       }
-//       if (isNaN(invest.profit)) {
-//         console.log('investment profit is not a number')
-//         res.json({message:'investment profit is not a number'})
-//         return
-//       }
-//       if (invest.profit <= 14) {
-//         try {
-//             mongoose.connect(process.env.ATLAS_URI)
-//             await User.updateOne(
-//               { email: user.email },
-//               {
-//                 $set: {
-//                   funded: user.funded + Math.round(11 / 100 * invest.profit),
-//                   periodicProfit: user.periodicProfit + Math.round(11 / 100 * invest.profit),
-//                   capital: user.capital + Math.round(11 / 100 * invest.profit),
-//                 }
-//               }
-//           )
-//           console.log('investment increased by 11%')
-//         } catch (error) {
-//           console.log(error)
-//         }
-        
-//       }
-//       if (invest.profit > 14 && invest.profit <= 40) {
-//         try {
-//               mongoose.connect(process.env.ATLAS_URI)
-//               await User.updateOne(
-//                 { email: user.email },
-//                 {
-//                   $set:{
-//                     funded:user.funded + Math.round(6/100 * invest.profit),
-//                     periodicProfit:user.periodicProfit + Math.round(6/100 * invest.profit),
-//                     capital:user.capital + Math.round(6/100 * invest.profit),
-//                   }
-//                 }
-//           )
-//              console.log('investment increased by 6%')
-//         } catch (error) {
-//              console.log(error)
-//         }
-         
-//         }
-//       else {
-        
-//         try {
-//           mongoose.connect(process.env.ATLAS_URI)
-//           await User.updateOne(
-//             { email: user.email },
-//             {
-//               $set:{
-//                 funded:user.funded + Math.round(4.5/100 * invest.profit),
-//                 periodicProfit:user.periodicProfit + Math.round(4.5/100 * invest.profit),
-//                 capital:user.capital + Math.round(4.5/100 * invest.profit),
-//               }
-//             }
-//           )
-//           console.log('investment increased by 4.5%')
-//         } catch (error) {
-//           console.log(error)
-//         }
-          
-//         }
-//  }
-//  )
-// }
-// )
-// } 
-
 
 
 app.get('/api/cronJob', async (req, res) => {
