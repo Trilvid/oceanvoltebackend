@@ -9,6 +9,7 @@ const path = require('path')
 var serveStatic = require('serve-static')
 const Token = require('./models/token')
 const crypto = require('crypto')
+const { time } = require('console')
 dotenv.config()
 
 const app = express()
@@ -267,11 +268,17 @@ app.post('/api/admin', async (req, res) => {
   }
 })
 
-
+// also worked here
 app.post('/api/deleteUser', async (req, res) => {
   try {
+    const user = await User.findOne({ email: req.body.email})
+    if (user.role === 'user') {
       await User.deleteOne({email:req.body.email})
-      return res.json({status:200})
+      return res.json({status:204})
+    }
+    else {
+      res.json({status: 400, message: 'you do not have permission to delete this user'})
+    }
   } catch (error) {
     return res.json({status:500,msg:`${error}`})
   }
@@ -401,6 +408,29 @@ app.get('/api/getUsers', async (req, res) => {
 })
 
 
+app.post('/api/updateprofit', async (req, res) => {
+  try {
+    const email = req.body.email
+    const incomingAmount = req.body.amount
+    const user = await User.findOne({ email: email })
+    console.log({email, incomingAmount, user})
+
+    await User.updateOne({email:email}, {$set: {
+      periodicProfit: incomingAmount
+    }}
+    )
+    return res.json({
+      status: 200,
+      message: `Hey Boss Mike $${incomingAmount} was added to ${user.firstname}\'s account`
+    })
+  }
+  catch (err) {
+    console.log(err.message)
+    res.json({message: 'something went wrong'})
+  }
+})
+
+
 app.post('/api/invest', async (req, res) => {
   const token = req.headers['x-access-token'];
   try {
@@ -504,31 +534,46 @@ app.post('/api/invest', async (req, res) => {
   }
 });
 
+// app.get('/api/time', () => {
+  
+//   const now = new Date();
+//   const endDate = new Date(now.getTime() + 300000);
+//   // working here care to join.... remember to delete fam
+//   console.log({started: now.getTime(), ended: endDate.getTime()})
+//   const started = 1687476137197;
+//   const ended = 1687476437197; 
+
+// })
+
 
 const changeInvestment = async (user, now) => {
   const updatedInvestments = user.investment.map(async (invest) => {
-    
+
     if (isNaN(invest.started)) {
-      console.log('investment is no a number')
-      res.json({message:'investment is no a number'})
-      return
+      console.log('investment is not a number')
+    return {
+      ...invest,
+    };
     }
-    if (user.investment === []) {
+    else if (user.investment === []) {
       console.log('investment is not empty array')
-      res.json({message:'no investment'})
-      return
+    return {
+      ...invest,
+    };
     }
-    if (now - invest.started >= invest.ended) {
+    else if (now >=  invest.ended) {
       console.log('investment completed')
-      res.json({message:'investment completed'})
-      return
+    return {
+      ...invest,
+    };
     }
-    if (isNaN(invest.profit)) {
+    else if (isNaN(invest.profit)) {
       console.log('investment profit is not a number')
-      res.json({message:'investment profit is not a number'})
-      return
+    return {
+      ...invest,
+    };
     }
-    if (invest.profit <= 14) {
+    else if (invest.profit <= 14) {
       try {
           mongoose.connect(process.env.ATLAS_URI)
           await User.updateOne(
@@ -546,8 +591,11 @@ const changeInvestment = async (user, now) => {
         console.log(error)
       }
       
+    return {
+      ...invest,
+    };      
     }
-    if (invest.profit > 14 && invest.profit <= 40) {
+    else if (invest.profit > 14 && invest.profit <= 40) {
       try {
             mongoose.connect(process.env.ATLAS_URI)
             await User.updateOne(
@@ -565,6 +613,10 @@ const changeInvestment = async (user, now) => {
            console.log(error)
       }
        
+    return {
+      ...invest,
+      
+    };
       }
     else {
       
